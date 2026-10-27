@@ -1,0 +1,486 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyOuohtBvWldK58hTzK9r4ak",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/Ananya2306/NLP/blob/main/lab2_1ipynb\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "9K3HTVSn40Gf",
+        "outputId": "67417a7c-3f3c-4b06-b618-72caa29de5ac"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Requirement already satisfied: nltk in /usr/local/lib/python3.13/dist-packages (3.9.1)\n",
+            "Requirement already satisfied: scikit-learn in /usr/local/lib/python3.13/dist-packages (1.6.1)\n",
+            "Requirement already satisfied: numpy in /usr/local/lib/python3.13/dist-packages (2.1.3)\n",
+            "Requirement already satisfied: matplotlib in /usr/local/lib/python3.13/dist-packages (3.10.0)\n",
+            "Requirement already satisfied: click in /usr/local/lib/python3.13/dist-packages (from nltk) (8.5.0)\n",
+            "Requirement already satisfied: joblib in /usr/local/lib/python3.13/dist-packages (from nltk) (1.6.0)\n",
+            "Requirement already satisfied: regex>=2021.8.3 in /usr/local/lib/python3.13/dist-packages (from nltk) (2025.11.3)\n",
+            "Requirement already satisfied: tqdm in /usr/local/lib/python3.13/dist-packages (from nltk) (4.67.3)\n",
+            "Requirement already satisfied: scipy>=1.6.0 in /usr/local/lib/python3.13/dist-packages (from scikit-learn) (1.16.3)\n",
+            "Requirement already satisfied: threadpoolctl>=3.1.0 in /usr/local/lib/python3.13/dist-packages (from scikit-learn) (3.7.0)\n",
+            "Requirement already satisfied: contourpy>=1.0.1 in /usr/local/lib/python3.13/dist-packages (from matplotlib) (1.4.0)\n",
+            "Requirement already satisfied: cycler>=0.10 in /usr/local/lib/python3.13/dist-packages (from matplotlib) (0.12.1)\n",
+            "Requirement already satisfied: fonttools>=4.22.0 in /usr/local/lib/python3.13/dist-packages (from matplotlib) (4.67.0)\n",
+            "Requirement already satisfied: kiwisolver>=1.3.1 in /usr/local/lib/python3.13/dist-packages (from matplotlib) (1.5.1)\n",
+            "Requirement already satisfied: packaging>=20.0 in /usr/local/lib/python3.13/dist-packages (from matplotlib) (26.3)\n",
+            "Requirement already satisfied: pillow>=8 in /usr/local/lib/python3.13/dist-packages (from matplotlib) (11.3.0)\n",
+            "Requirement already satisfied: pyparsing>=2.3.1 in /usr/local/lib/python3.13/dist-packages (from matplotlib) (3.3.3)\n",
+            "Requirement already satisfied: python-dateutil>=2.7 in /usr/local/lib/python3.13/dist-packages (from matplotlib) (2.9.0.post0)\n",
+            "Requirement already satisfied: cloudpickle>=3.0 in /usr/local/lib/python3.13/dist-packages (from joblib->nltk) (3.1.2)\n",
+            "Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.13/dist-packages (from python-dateutil>=2.7->matplotlib) (1.17.0)\n"
+          ]
+        }
+      ],
+      "source": [
+        "!pip install nltk scikit-learn numpy matplotlib"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        " UNIT - 1 CLASSICAL APPROACHES OF NLP"
+      ],
+      "metadata": {
+        "id": "WV6i5SwH5aWe"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "*EXPERIMENT 1.1 -  TEXT PREPROCESSING PIPELINE*"
+      ],
+      "metadata": {
+        "id": "ExH59Usp6Enb"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import re\n",
+        "import nltk\n",
+        "from nltk import pos_tag\n",
+        "from nltk.corpus import stopwords, wordnet\n",
+        "from nltk.stem import WordNetLemmatizer, PorterStemmer\n",
+        "from nltk.tokenize import word_tokenize, sent_tokenize\n",
+        "\n",
+        "for pkg in [\"punkt\", \"punkt_tab\", \"stopwords\", \"wordnet\", \"averaged_perceptron_tagger\", \"averaged_perceptron_tagger_eng\"]:\n",
+        "  nltk.download(pkg)\n",
+        "\n",
+        "text = (\"Dr. Rao's team is building chatbots, translators and search engines! \"\n",
+        "        \"The systems were running faster than expected. \"\n",
+        "        \"Visit https://example.com or mail nlp@lab.edu for details.\")\n",
+        "# Step 1: sentence segmentation (before lower-casing so that 'Dr.' is handled)\n",
+        "sentences = sent_tokenize(text)\n",
+        "print(\"Sentences:\", len(sentences))\n",
+        "for s in sentences:\n",
+        "       print(\"  -\", s)\n",
+        "\n",
+        " # Step 2: normalisation - remove URLs / e-mails, lower-case, strip punctuation\n",
+        "def normalise(s):\n",
+        "      s = re.sub(r\"https?://\\S+|\\S+@\\S+\", \" \", s)\n",
+        "      return s.lower()\n",
+        "\n",
+        "  # Step 3: word tokenisation and stop-word removal\n",
+        "stop = set(stopwords.words(\"english\"))\n",
+        "tokens = [t for s in sentences for t in word_tokenize(normalise(s))]\n",
+        "words = [t for t in tokens if t.isalpha()]\n",
+        "content = [t for t in words if t not in stop]\n",
+        "print(\"\\nTokens  :\", tokens)\n",
+        "print(\"Content :\", content)\n",
+        "\n",
+        "# Step 4: stemming vs lemmatisation (POS-aware)\n",
+        "ps, wnl = PorterStemmer(), WordNetLemmatizer()\n",
+        "def to_wn(tag):\n",
+        "      return {\"J\": wordnet.ADJ, \"V\": wordnet.VERB,\n",
+        "               \"N\": wordnet.NOUN, \"R\": wordnet.ADV}.get(tag[0], wordnet.NOUN)\n",
+        "\n",
+        "print(f\"\\n{'word':12}{'stem':12}{'lemma':12}\")\n",
+        "for w, tag in pos_tag(content):\n",
+        "         print(f\"{w:12}{ps.stem(w):12}{wnl.lemmatize(w, to_wn(tag)):12}\")\n",
+        "\n",
+        "# Step 5: vocabulary reduction\n",
+        "print(\"\\nVocabulary size  raw:\", len(set(words)),\n",
+        "        \"| after stop-word removal:\", len(set(content)),\n",
+        "        \"| after stemming:\", len({ps.stem(w) for w in content}))"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "hHgm96KI5gYO",
+        "outputId": "7272e416-e3f6-429f-ee90-931dd798f793"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stderr",
+          "text": [
+            "[nltk_data] Downloading package punkt to /root/nltk_data...\n",
+            "[nltk_data]   Package punkt is already up-to-date!\n",
+            "[nltk_data] Downloading package punkt_tab to /root/nltk_data...\n",
+            "[nltk_data]   Package punkt_tab is already up-to-date!\n",
+            "[nltk_data] Downloading package stopwords to /root/nltk_data...\n",
+            "[nltk_data]   Package stopwords is already up-to-date!\n",
+            "[nltk_data] Downloading package wordnet to /root/nltk_data...\n",
+            "[nltk_data]   Package wordnet is already up-to-date!\n",
+            "[nltk_data] Downloading package averaged_perceptron_tagger to\n",
+            "[nltk_data]     /root/nltk_data...\n",
+            "[nltk_data]   Package averaged_perceptron_tagger is already up-to-\n",
+            "[nltk_data]       date!\n",
+            "[nltk_data] Downloading package averaged_perceptron_tagger_eng to\n",
+            "[nltk_data]     /root/nltk_data...\n",
+            "[nltk_data]   Package averaged_perceptron_tagger_eng is already up-to-\n",
+            "[nltk_data]       date!\n"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Sentences: 3\n",
+            "  - Dr. Rao's team is building chatbots, translators and search engines!\n",
+            "  - The systems were running faster than expected.\n",
+            "  - Visit https://example.com or mail nlp@lab.edu for details.\n",
+            "\n",
+            "Tokens  : ['dr.', 'rao', \"'s\", 'team', 'is', 'building', 'chatbots', ',', 'translators', 'and', 'search', 'engines', '!', 'the', 'systems', 'were', 'running', 'faster', 'than', 'expected', '.', 'visit', 'or', 'mail', 'for', 'details', '.']\n",
+            "Content : ['rao', 'team', 'building', 'chatbots', 'translators', 'search', 'engines', 'systems', 'running', 'faster', 'expected', 'visit', 'mail', 'details']\n",
+            "\n",
+            "word        stem        lemma       \n",
+            "rao         rao         rao         \n",
+            "team        team        team        \n",
+            "building    build       build       \n",
+            "chatbots    chatbot     chatbots    \n",
+            "translators translat    translator  \n",
+            "search      search      search      \n",
+            "engines     engin       engines     \n",
+            "systems     system      system      \n",
+            "running     run         run         \n",
+            "faster      faster      faster      \n",
+            "expected    expect      expect      \n",
+            "visit       visit       visit       \n",
+            "mail        mail        mail        \n",
+            "details     detail      detail      \n",
+            "\n",
+            "Vocabulary size  raw: 21 | after stop-word removal: 14 | after stemming: 14\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "*EXPERIMENT 1.2 - STATISTICAL TEXT CLASSIFICATION AND EVALUATION*"
+      ],
+      "metadata": {
+        "id": "lwv0T_uv_Nvi"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import random\n",
+        "import nltk\n",
+        "from nltk.corpus import movie_reviews\n",
+        "from sklearn.feature_extraction.text import TfidfVectorizer\n",
+        "from sklearn.model_selection import train_test_split, cross_val_score\n",
+        "from sklearn.naive_bayes import MultinomialNB\n",
+        "from sklearn.linear_model import LogisticRegression\n",
+        "from sklearn.metrics import classification_report, confusion_matrix\n",
+        "from sklearn.pipeline import make_pipeline\n",
+        "\n",
+        "\n",
+        "nltk.download(\"movie_reviews\", quiet=True)\n",
+        "# 1. Load the labelled corpus (1000 positive + 1000 negative reviews)\n",
+        "docs = [(movie_reviews.raw(f), c)\n",
+        "        for c in movie_reviews.categories()\n",
+        "        for f in movie_reviews.fileids(c)]\n",
+        "random.seed(42); random.shuffle(docs)\n",
+        "X = [d for d, _ in docs]; y = [c for _, c in docs]\n",
+        "X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.25,random_state=42, stratify=y)\n",
+        "# 2. Two classifiers on the same TF-IDF features\n",
+        "def build(clf):\n",
+        "       return make_pipeline(TfidfVectorizer(stop_words=\"english\", min_df=3,ngram_range=(1, 2), sublinear_tf=True), clf)\n",
+        "\n",
+        "models = {\"Naive Bayes\": build(MultinomialNB()),\"Logistic Regression\": build(LogisticRegression(max_iter=1000))}\n",
+        "\n",
+        "for name, model in models.items():\n",
+        "       model.fit(X_tr, y_tr)\n",
+        "       pred = model.predict(X_te)\n",
+        "       print(\"=\" * 60, \"\\n\", name, sep=\"\")\n",
+        "       print(classification_report(y_te, pred, digits=3))\n",
+        "       print(\"Confusion matrix [neg, pos]:\\n\", confusion_matrix(y_te, pred))\n",
+        "       print(\"5-fold CV accuracy: %.3f\" % cross_val_score(model, X, y, cv=5).mean())\n",
+        "\n",
+        "# 3. Inspect the most informative words (Naive Bayes)\n",
+        "nb = models[\"Naive Bayes\"]\n",
+        "vec, clf = nb.named_steps[\"tfidfvectorizer\"], nb.named_steps[\"multinomialnb\"]\n",
+        "names = vec.get_feature_names_out()\n",
+        "diff = clf.feature_log_prob_[1] - clf.feature_log_prob_[0]\n",
+        "order = diff.argsort()\n",
+        "print(\"\\nMost negative:\", [names[i] for i in order[:10]])\n",
+        "print(\"Most positive:\", [names[i] for i in order[-10:]])"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "t0VjoZ5f_W6s",
+        "outputId": "26827f36-f8e4-465e-f2a7-124e5760c70f"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "============================================================\n",
+            "Naive Bayes\n",
+            "              precision    recall  f1-score   support\n",
+            "\n",
+            "         neg      0.804     0.804     0.804       250\n",
+            "         pos      0.804     0.804     0.804       250\n",
+            "\n",
+            "    accuracy                          0.804       500\n",
+            "   macro avg      0.804     0.804     0.804       500\n",
+            "weighted avg      0.804     0.804     0.804       500\n",
+            "\n",
+            "Confusion matrix [neg, pos]:\n",
+            " [[201  49]\n",
+            " [ 49 201]]\n",
+            "5-fold CV accuracy: 0.829\n",
+            "============================================================\n",
+            "Logistic Regression\n",
+            "              precision    recall  f1-score   support\n",
+            "\n",
+            "         neg      0.827     0.844     0.836       250\n",
+            "         pos      0.841     0.824     0.832       250\n",
+            "\n",
+            "    accuracy                          0.834       500\n",
+            "   macro avg      0.834     0.834     0.834       500\n",
+            "weighted avg      0.834     0.834     0.834       500\n",
+            "\n",
+            "Confusion matrix [neg, pos]:\n",
+            " [[211  39]\n",
+            " [ 44 206]]\n",
+            "5-fold CV accuracy: 0.850\n",
+            "\n",
+            "Most negative: ['worst', 'boring', 'wasted', 'waste', 'awful', 'stupid', 'lame', 'schumacher', 'seagal', 'waste time']\n",
+            "Most positive: ['stiller', 'terrific', 'superb', 'finest', 'damon', 'anger', 'beautifully', 'political', 'wonderfully', 'outstanding']\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "EXPERIMENT 1.3 - AUTOMATIC EXTRACTIVE TEXT SUMMARISATION"
+      ],
+      "metadata": {
+        "id": "LoyJUd55Gi8S"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import re\n",
+        "from collections import Counter\n",
+        "import nltk\n",
+        "from nltk.corpus import stopwords\n",
+        "from nltk.tokenize import sent_tokenize, word_tokenize\n",
+        "\n",
+        "for p in [\"punkt\", \"punkt_tab\", \"stopwords\"]:\n",
+        "   nltk.download(p, quiet=True)\n",
+        "\n",
+        "text = \"\"\"Natural language processing began in the 1950s with machine translation experiments.\n",
+        "      Early systems relied on hand-written rules created by linguists.\n",
+        "      These rule-based systems were accurate in narrow domains but difficult to scale.\n",
+        "      In the 1990s statistical methods replaced many rules because large corpora became available.\n",
+        "      Statistical models learn patterns of language from annotated text.\n",
+        "      Today neural networks power translation, search and virtual assistants.\n",
+        "      Modern language models are trained on billions of words.\n",
+        "      The field continues to grow as new applications appear in education and health care.\"\"\"\n",
+        "\n",
+        "reference = (\"NLP moved from hand-written rules to statistical methods \"\n",
+        "             \"and now to neural networks trained on large corpora.\")\n",
+        "\n",
+        "stop = set(stopwords.words(\"english\"))\n",
+        "sents = sent_tokenize(text)\n",
+        "\n",
+        "# 1. Word-frequency table (content words only)\n",
+        "words = [w.lower()\n",
+        "        for w in word_tokenize(text)\n",
+        "            if w.isalpha() and w.lower() not in stop]\n",
+        "\n",
+        "freq = Counter(words)\n",
+        "maxf = max(freq.values())\n",
+        "weight = {w: c / maxf for w, c in freq.items()}\n",
+        "# normalised frequency\n",
+        "\n",
+        "# 2. Score each sentence = sum of word weights / length (avoids long-sentence bias)\n",
+        "def score(sent):\n",
+        "   ws = [w.lower()\n",
+        "          for w in word_tokenize(sent)\n",
+        "              if w.isalpha() and w.lower() not in stop]\n",
+        "   return sum(weight.get(w, 0) for w in ws) / (len(ws) or 1)\n",
+        "\n",
+        "scores = {s: score(s) for s in sents}\n",
+        "\n",
+        "# 3. Pick the top-k sentences, keep original order\n",
+        "def summarise(k=3):\n",
+        "   top = sorted(sents, key=lambda s: scores[s], reverse=True)[:k]\n",
+        "   return \" \".join(s for s in sents if s in top)\n",
+        "\n",
+        "summary = summarise(3)\n",
+        "print(\"SUMMARY:\\n\", summary)\n",
+        "print(\"\\nCompression ratio: %.2f\" % (len(summary.split()) / len(text.split())))\n",
+        "\n",
+        "# 4. ROUGE-1 (unigram overlap) against the reference summary\n",
+        "def unigrams(t):\n",
+        "   return Counter(re.findall(r\"[a-z]+\", t.lower()))\n",
+        "\n",
+        "ref, hyp = unigrams(reference), unigrams(summary)\n",
+        "overlap = sum((ref & hyp).values())\n",
+        "p, r = overlap / sum(hyp.values()), overlap / sum(ref.values())\n",
+        "f = 2 * p * r / (p + r) if p + r else 0\n",
+        "print(f\"ROUGE-1  P={p:.2f}  R={r:.2f}  F1={f:.2f}\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "S_PwWeQ4Gjjg",
+        "outputId": "6d706c2e-7979-4fda-a00b-da511cdbcac1"
+      },
+      "execution_count": 12,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "SUMMARY:\n",
+            " Natural language processing began in the 1950s with machine translation experiments. Statistical models learn patterns of language from annotated text. Modern language models are trained on billions of words.\n",
+            "\n",
+            "Compression ratio: 0.34\n",
+            "ROUGE-1  P=0.14  R=0.22  F1=0.17\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "UNIT - 2 - EMPIRICAL APPROACHES"
+      ],
+      "metadata": {
+        "id": "kSY_WjEzHQf3"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "*EXPERIMENT 2.1 - Corpus Exploration and Corpus Statistics*"
+      ],
+      "metadata": {
+        "id": "F9MoANTAI-lM"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import nltk\n",
+        "from nltk import FreqDist, ConditionalFreqDist, Text\n",
+        "from nltk.corpus import brown, stopwords\n",
+        "from nltk.collocations import BigramCollocationFinder, BigramAssocMeasures\n",
+        "\n",
+        "for p in [\"brown\", \"stopwords\"]:\n",
+        "   nltk.download(p, quiet=True)\n",
+        "\n",
+        "# 1. Corpus structure\n",
+        "print(\"Genres :\", brown.categories())\n",
+        "print(\"Words  :\", len(brown.words()), \"| Sentences:\", len(brown.sents()))\n",
+        "\n",
+        "# 2. Lexical diversity (type/token ratio) and average sentence length per genre\n",
+        "print(f\"\\n{'genre':14}{'tokens':>9}{'types':>8}{'TTR':>8}{'avg sent len':>14}\")\n",
+        "for g in [\"news\", \"religion\", \"fiction\", \"romance\", \"science_fiction\", \"learned\"]:\n",
+        "     w = [x.lower() for x in brown.words(categories=g)]\n",
+        "     avg = len(w) / len(brown.sents(categories=g))\n",
+        "     print(f\"{g:14}{len(w):9}{len(set(w)):8}{len(set(w))/len(w):8.3f}{avg:14.1f}\")\n",
+        "\n",
+        "# 3. Frequency distribution and Zipf's law\n",
+        "stop = set(stopwords.words(\"english\"))\n",
+        "fd = FreqDist(w.lower()\n",
+        "              for w in brown.words(categories=\"news\")\n",
+        "                if w.isalpha())\n",
+        "\n",
+        "print(\"\\nTop 10 words:\", fd.most_common(10))\n",
+        "print(\"Top 10 content words:\",\n",
+        "      [(w, c) for w, c in fd.most_common(60)\n",
+        "        if w not in stop][:10])\n",
+        "print(\"Words occurring once (hapaxes): %.1f%% of vocabulary\"\n",
+        "       % (100 * len(fd.hapaxes()) / len(fd)))\n",
+        "\n",
+        "for rank, (w, c) in enumerate(fd.most_common(5), 1):\n",
+        "     print(f\"rank {rank}: {w:6} freq {c:6}  rank*freq = {rank*c}\")\n",
+        "\n",
+        "# 4. Concordance\n",
+        "Text(brown.words(categories=\"news\")).concordance(\"government\", width=70, lines=5)\n",
+        "\n",
+        "# 5. Conditional frequency: modal verbs across genres\n",
+        "modals = [\"can\", \"could\", \"may\", \"might\", \"must\", \"will\"]\n",
+        "cfd = ConditionalFreqDist((g, w.lower()) for g in [\"news\", \"religion\", \"romance\", \"humor\"]\n",
+        "                          for w in brown.words(categories=g))\n",
+        "\n",
+        "print()\n",
+        "cfd.tabulate(conditions=[\"news\", \"religion\", \"romance\", \"humor\"], samples=modals)\n",
+        "\n",
+        "# 6. Collocations / multiword candidates using PMI\n",
+        "words = [w.lower()\n",
+        "        for w in brown.words(categories=\"news\")\n",
+        "           if w.isalpha()]\n",
+        "\n",
+        "finder = BigramCollocationFinder.from_words(words)\n",
+        "finder.apply_freq_filter(5)\n",
+        "print(\"\\nTop PMI bigrams:\", finder.nbest(BigramAssocMeasures.pmi, 10))"
+      ],
+      "metadata": {
+        "id": "OU2aRV2JHVUW"
+      },
+      "execution_count": null,
+      "outputs": []
+    }
+  ]
+}
