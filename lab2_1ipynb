@@ -4,7 +4,7 @@
   "metadata": {
     "colab": {
       "provenance": [],
-      "authorship_tag": "ABX9TyOuohtBvWldK58hTzK9r4ak",
+      "authorship_tag": "ABX9TyMyfEaDC16kW7zNQPKwyp9d",
       "include_colab_link": true
     },
     "kernelspec": {
@@ -385,7 +385,7 @@
         "id": "S_PwWeQ4Gjjg",
         "outputId": "6d706c2e-7979-4fda-a00b-da511cdbcac1"
       },
-      "execution_count": 12,
+      "execution_count": null,
       "outputs": [
         {
           "output_type": "stream",
@@ -477,10 +477,158 @@
         "print(\"\\nTop PMI bigrams:\", finder.nbest(BigramAssocMeasures.pmi, 10))"
       ],
       "metadata": {
-        "id": "OU2aRV2JHVUW"
+        "id": "OU2aRV2JHVUW",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "1e2b0eff-c629-45a7-e17b-973466517b14"
       },
-      "execution_count": null,
-      "outputs": []
+      "execution_count": 2,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Genres : ['adventure', 'belles_lettres', 'editorial', 'fiction', 'government', 'hobbies', 'humor', 'learned', 'lore', 'mystery', 'news', 'religion', 'reviews', 'romance', 'science_fiction']\n",
+            "Words  : 1161192 | Sentences: 57340\n",
+            "\n",
+            "genre            tokens   types     TTR  avg sent len\n",
+            "news             100554   13112   0.130          21.8\n",
+            "religion          39399    5931   0.151          23.0\n",
+            "fiction           68488    8680   0.127          16.1\n",
+            "romance           70022    7883   0.113          15.8\n",
+            "science_fiction    14470    3032   0.210          15.3\n",
+            "learned          181888   15476   0.085          23.5\n",
+            "\n",
+            "Top 10 words: [('the', 6386), ('of', 2861), ('and', 2186), ('to', 2144), ('a', 2130), ('in', 2020), ('for', 969), ('that', 829), ('is', 733), ('was', 717)]\n",
+            "Top 10 content words: [('said', 406), ('would', 246), ('new', 241), ('one', 213), ('last', 177), ('two', 174), ('first', 158), ('state', 153), ('year', 142), ('president', 142)]\n",
+            "Words occurring once (hapaxes): 48.6% of vocabulary\n",
+            "rank 1: the    freq   6386  rank*freq = 6386\n",
+            "rank 2: of     freq   2861  rank*freq = 5722\n",
+            "rank 3: and    freq   2186  rank*freq = 6558\n",
+            "rank 4: to     freq   2144  rank*freq = 8576\n",
+            "rank 5: a      freq   2130  rank*freq = 10650\n",
+            "Displaying 5 of 73 matches:\n",
+            "r student . In addition , the government would pay a $1,000 `` cost of\n",
+            "the 1961-62 budget for direct government research in medicine . The Pr\n",
+            "tcome in Laos was a coalition government susceptible of Communist domi\n",
+            "alized Laos . The pro-Western government , which the United States had\n",
+            "vanna Phouma `` neutralist '' government , never did appear to spark m\n",
+            "\n",
+            "           can could   may might  must  will \n",
+            "    news    94    87    93    38    53   389 \n",
+            "religion    84    59    79    12    54    72 \n",
+            " romance    79   195    11    51    46    49 \n",
+            "   humor    17    33     8     8     9    13 \n",
+            "\n",
+            "Top PMI bigrams: [('dolce', 'vita'), ('notre', 'dame'), ('scottish', 'rite'), ('hong', 'kong'), ('anne', 'arundel'), ('viet', 'nam'), ('potato', 'chip'), ('el', 'paso'), ('collective', 'bargaining'), ('los', 'angeles')]\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "*EXPERIMENT - 2.2 Treebank Annotation, PCFG Induction and Inter-Annotator Agreement*"
+      ],
+      "metadata": {
+        "id": "dOW5MQjnAc_2"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from collections import Counter\n",
+        "import nltk\n",
+        "from nltk import Nonterminal, induce_pcfg\n",
+        "from nltk.corpus import treebank\n",
+        "from nltk.metrics.agreement import AnnotationTask\n",
+        "\n",
+        "for p in [\"treebank\"]:\n",
+        "   nltk.download(p, quiet=True)\n",
+        "\n",
+        "# 1. Inspect a Penn Treebank sentence (phrase-structure annotation)\n",
+        "tree = treebank.parsed_sents()[0]\n",
+        "print(tree)\n",
+        "print(\"Leaves :\", tree.leaves())\n",
+        "print(\"Height :\", tree.height(), \"| NP subtrees:\", len(list(tree.subtrees(lambda t: t.label() == \"NP\"))))\n",
+        "\n",
+        "# 2. Corpus statistics: tag and phrase distributions\n",
+        "tags = Counter(t for _, t in treebank.tagged_words())\n",
+        "print(\"\\nTokens:\", sum(tags.values()), \"| distinct tags:\", len(tags))\n",
+        "print(\"Top tags:\", tags.most_common(8))\n",
+        "phrases = Counter(st.label() for t in treebank.parsed_sents()\n",
+        "                   for st in t.subtrees() if st.height() > 2)\n",
+        "print(\"Top phrase labels:\", phrases.most_common(6))\n",
+        "\n",
+        "# 3. Induce a PCFG from 200 trees (the treebank IS the grammar source)\n",
+        "productions = []\n",
+        "for t in treebank.parsed_sents()[:200]:\n",
+        "       t = t.copy(deep=True)\n",
+        "       t.collapse_unary(collapsePOS=False)\n",
+        "       t.chomsky_normal_form(horzMarkov=2)\n",
+        "       productions += t.productions()\n",
+        "\n",
+        "pcfg = induce_pcfg(Nonterminal(\"S\"), productions)\n",
+        "print(\"\\nInduced PCFG with\", len(pcfg.productions()), \"productions. Rules for S:\")\n",
+        "for p in pcfg.productions(Nonterminal(\"S\"))[:5]:\n",
+        "       print(\"  \", p)\n",
+        "\n",
+        "# 4. Annotation quality - inter-annotator agreement (Cohen's kappa)\n",
+        "#    Two annotators label the sentiment of 10 sentences\n",
+        "a = [\"pos\",\"pos\",\"neg\",\"neu\",\"pos\",\"neg\",\"neg\",\"neu\",\"pos\",\"neu\"]\n",
+        "b = [\"pos\",\"pos\",\"neg\",\"pos\",\"pos\",\"neg\",\"neu\",\"neu\",\"pos\",\"neg\"]\n",
+        "data = [(\"A\", i, l) for i, l in enumerate(a)] + [(\"B\", i, l) for i, l in enumerate(b)]\n",
+        "task = AnnotationTask(data=data)\n",
+        "print(\"\\nObserved agreement : %.2f\" % task.avg_Ao())\n",
+        "print(\"Cohen's kappa      : %.3f\" % task.kappa())"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "_HxmH6-0Ap8K",
+        "outputId": "4e7807f7-b7b8-4759-889a-b1eade98d490"
+      },
+      "execution_count": 1,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "(S\n",
+            "  (NP-SBJ\n",
+            "    (NP (NNP Pierre) (NNP Vinken))\n",
+            "    (, ,)\n",
+            "    (ADJP (NP (CD 61) (NNS years)) (JJ old))\n",
+            "    (, ,))\n",
+            "  (VP\n",
+            "    (MD will)\n",
+            "    (VP\n",
+            "      (VB join)\n",
+            "      (NP (DT the) (NN board))\n",
+            "      (PP-CLR (IN as) (NP (DT a) (JJ nonexecutive) (NN director)))\n",
+            "      (NP-TMP (NNP Nov.) (CD 29))))\n",
+            "  (. .))\n",
+            "Leaves : ['Pierre', 'Vinken', ',', '61', 'years', 'old', ',', 'will', 'join', 'the', 'board', 'as', 'a', 'nonexecutive', 'director', 'Nov.', '29', '.']\n",
+            "Height : 7 | NP subtrees: 4\n",
+            "\n",
+            "Tokens: 100676 | distinct tags: 46\n",
+            "Top tags: [('NN', 13166), ('IN', 9857), ('NNP', 9410), ('DT', 8165), ('-NONE-', 6592), ('NNS', 6047), ('JJ', 5834), (',', 4886)]\n",
+            "Top phrase labels: [('NP', 23724), ('VP', 14510), ('S', 8650), ('NP-SBJ', 7642), ('PP', 5159), ('SBAR', 2355)]\n",
+            "\n",
+            "Induced PCFG with 3279 productions. Rules for S:\n",
+            "   S -> NP-SBJ S|<VP-.> [0.194379]\n",
+            "   S -> NP-SBJ-1 S|<VP-.> [0.028103]\n",
+            "   S -> NP-SBJ NP-PRD [0.0187354]\n",
+            "   S -> S-TPC-1 S|<,-NP-SBJ> [0.0210773]\n",
+            "   S -> -NONE- [0.0655738]\n",
+            "\n",
+            "Observed agreement : 0.70\n",
+            "Cohen's kappa      : 0.538\n"
+          ]
+        }
+      ]
     }
   ]
 }
